@@ -1,9 +1,11 @@
 import os
 import json
+import jsonlines
 from nltk import word_tokenize
 import chardet
 import tokenize
 import html
+import gzip
 
 # todo: 
 # - nltk 词干还原
@@ -11,6 +13,7 @@ import html
 
 # 非 Linux 环境下记得自己改路径
 ppath = os.getcwd()+'/'
+ipath = ppath + '/index/'
 rpath = ppath + '/Reuters/'
 # 语料数量是常数 by 文件夹下文件数量
 D = 10788 
@@ -21,6 +24,18 @@ def write_to_file(data, filename):
     str = json.JSONEncoder().encode(data)
     file.write(str)
     file.close()
+
+# 使用gzip压缩算法
+def zip_file(data, filename):
+    with gzip.GzipFile(filename,'w') as fid_gz:
+        s = json.JSONEncoder().encode(data)
+        B = bytes(s,'utf8')
+        fid_gz.write(B)
+
+
+
+
+
 
 # 获取语料库的所有文件列表
 def get_doc_list():
@@ -67,19 +82,36 @@ def process_doc_content(filename):
 
 # 从 JSON 中读取倒排索引/词表
 def get_from_file(filename):
-    file = open(filename+'.json', 'r')
+    file = open(ipath + filename + '.json', 'r')
     res = json.JSONDecoder().decode(file.read())
     return res
 
+# 从压缩过的二进制文件中读取索引/词表
+def get_from_gz(filename):
+    with gzip.GzipFile(ipath + filename + '.gz','r') as fid_gz :
+        res = eval(fid_gz.read())
+    return res
+
+# 从 JSON 中读取同义词表
+def get_from_file_L(filename):
+    file = filename + '.jsonl'
+    res = jsonlines.open(file)
+    return res
 
 # 读取位置索引
 def loadIndex(word):
-    f = open("index.json", encoding='utf-8')
+    # with gzip.GzipFile('index/index.gz','r') as fid_gz :
+    #     raw = fid_gz.read()
+    #     dictionary = json.JSONDecoder().decode(raw)
+    f = open("index/index.json", encoding='utf-8')
     dictionary = json.load(f)
-    index = dictionary[word]
+    index = dictionary[word] if word in dictionary.keys() else None
     result = []
-    for item in index:
-        result.append(int(item))
+    if index is not None:
+        for item in index:
+            result.append(int(item))
+    else:
+        result = []
     return index, result
 
 # 打印结果

@@ -1,6 +1,9 @@
 import os
+import io
 import utils
 import math
+import json
+import jsonlines
 
 # 构建倒排索引(Reuters 的默认路径在上级目录)
 def create_index():
@@ -36,6 +39,22 @@ def get_wordlist(index):
     
     return wordlist
 
+# 生成同义词表
+def create_synonymslist(wordlist):
+    synonymslist = utils.get_from_file_L('en_thesaurus')
+    # fp = io.BytesIO()  # writable file-like object
+    writer = jsonlines.open('synonymslist.jsonl', mode='w')
+    for synonymsword in synonymslist:
+        if synonymsword["word"] in wordlist:
+            synonyms = synonymsword["synonyms"]
+            for word_t in synonyms:
+                word_t_l = word_t.lower()
+                if word_t_l not in wordlist:
+                    synonymsword["synonyms"].remove(word_t)
+            writer.write(synonymsword)
+    # writer.close()
+    # fp.close()
+
 # 生成 VSM
 # TF_word_i = len(index[word][article_i])/doc_size[article_i]
 # IDF = log_2(D/len(index[word])), D=10788
@@ -51,36 +70,25 @@ def create_VSM(index, doc_size, wordlist):
         tf_idf_list = []
         num = 0
         for word in wordlist:
-            # 简单的索引压缩：不存在的词直接跳过。第一项的编号与index的编号对应。
-            if str(d) not in index[word]:               # 如果该词的索引中不存在该篇目编号
+            # print(word)
+            # 简单的索引压缩：不存在的词直接跳过。使用跳着存的方式。（类似于游程编码）
+            if d not in index[word]:               # 如果该词的索引中不存在该篇目编号
+                # print(str(d))
+                # print('not in')
                 num += 1
-                continue
-            else:
+                # print(num)
+                # continue
+            if d in index[word]:
+                # print('in')
                 if num > 0:
-                    tf_idf_list.append(str(num))        # 篇目号
-                tf = float(len(index[word][str(d)])/doc_size[d])
+                    tf_idf_list.append(str(num))        # 距离上一个篇目的间隔
+                # tf = float(len(index[word][str(d)])/doc_size[d])
+                tf = float(len(index[word][d])/doc_size[d])
                 idf = math.log2(utils.D/len(index[word]))
-                tf_idf = '%.3f' % float(tf*idf)         # 保留三位小数
-                tf_idf_list.append(tf_idf)
-                num = 0
+                tfidf = "%.3f" % float(tf * idf)         # 保留三位小数
+                tf_idf_list.append(tfidf)
+                num = 0                                 # 更新间隔
         VSM[d] = tf_idf_list
 
     return VSM
 
-# 为 Top K 暴力查表做准备
-# 跑的是全局胜者表
-# 全局胜者表：对每个文档记录tf-idf权重之和
-
-def VSM_sum(VSM):
-    sum_VSM = {}
-    for d in range(1, utils.D*2+1): # 21576
-        if d % 1000 == 0:
-            print('Processing'+str(d))
-        if str(d) in VSM.keys():
-            sum = 0.0
-            for tfidf in VSM[str(d)]:
-                if float(tfidf) < 1:
-                    sum += float(tfidf)
-            sum_VSM[d] = '%.3f' % sum
-    
-    return sum_VSM

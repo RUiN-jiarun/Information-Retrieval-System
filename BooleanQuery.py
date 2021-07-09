@@ -1,11 +1,7 @@
 import json
 import utils
-import chardet
-import tokenize
-import html
 import topk
 
-# input word and return the inverted index of the word
 def boolquery(query):
     all_doc = utils.get_doc_list()
     all_doc.sort()
@@ -176,14 +172,17 @@ def boolquery(query):
 # 读取输入
 def controller(query):
     index = boolquery(query)
-    query.replace('NOT','')
-    query.replace('AND','')
-    query.replace('OR','')
-    query.replace('(','')
-    query.replace(')','')
-    query.replace('  ',' ')
+    # print(query)
+    query = query.replace('NOT','')
+    query = query.replace('AND','')
+    query = query.replace('OR','')
+    query = query.replace('(','')
+    query = query.replace(')','')
+    query = query.replace('  ',' ')
+    # print(query)
     wordlist = []
     wordlist = query.split(' ')
+    # print(wordlist)
     docID = topk.topK(wordlist,index)
     utils.printtext(wordlist,docID)
 

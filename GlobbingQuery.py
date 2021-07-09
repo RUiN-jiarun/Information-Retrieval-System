@@ -215,6 +215,7 @@ def globbingquery(query, btree, btree_rev, wordlist):
             return result
 
     # 包含多个模糊字符*，使用递归
+    ################## FIXME ##################
     else:
         if query[0]!='*' and query[len(query)-1]!='*':
             words_list = query.split('*')

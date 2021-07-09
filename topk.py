@@ -1,4 +1,3 @@
-import score
 import utils
 
 class ZHeap:
@@ -50,6 +49,7 @@ class ZHeap:
         self.heapsize += 1
 
     def _delete(self):
+        # 删除最后一个值，调整使满足堆结构
         last = len(self.items) - 1
         if last < 0:
             # 堆为空
@@ -86,29 +86,64 @@ class ZPriorityQ(ZHeap):
         val = ZHeap._delete(self)
         return val
 
+VSM = utils.get_from_file('VSM')
+Wordlist = utils.get_from_file('wordlist')
+
+def cosinescore(Qlist, docID):
+	# print(docID)
+	global VSM
+	global Wordlist
+
+	doc_magnitude_0 = VSM[str(docID)]
+	doc_magnitude_1 = []
+	for score in doc_magnitude_0:
+		if not score.isdigit():
+			doc_magnitude_1.append(score)
+		else:
+			for i in range(int(score)):
+				doc_magnitude_1.append('0.0')
+	if len(doc_magnitude_1) < len(Wordlist):
+		num = len(Wordlist) - len(doc_magnitude_1)
+		# append_list = []
+		doc_magnitude_1.extend(['0.0'] * num)
+
+	result = 0
+	for Qword in Qlist:
+		if Qword != "AND" and Qword != "OR" and Qword != "NOT":
+			index = Wordlist.index(Qword)
+			# print(index)
+			# print(len(doc_magnitude_1))
+			result += float(doc_magnitude_1[index])
+	# c_score = '%.20f' % float(result)
+	# print(result)
+	return result
+
+
+
 def topK(wordlist, docID):
 
-    K = int(input("显示排序前多少的文档？\n输入-1显示全部\n"))
+    K = int(input("显示排序前多少名的文档？\n输入-1显示全部\n"))
     print("\n\n************* 查询结果 ************\n\n共找到 ",len(docID), " 篇文档\n")
-    VSM_sum = utils.get_from_file('VSM_sum')
     pq = ZPriorityQ()
     if len(docID) < K or K == -1:
         K = len(docID)
+
     for doc in docID:
         #calculate the score of cos(q,d)
-        #value = score.cosinescore(wordlist, doc)
-        #print(value)
-        #get the tf-idf
-        #doc_score = VSM_sum[str(doc)]+value
-        if str(doc) in VSM_sum:
-            doc_score = VSM_sum[str(doc)]
+        value = cosinescore(wordlist, doc)
+
+        doc_score = - float(value)
         pq.enQ(doc_score, doc)
     result = []
     for i in range(K):
         doc = pq.deQ()
-        #print(doc)
+        # print(score_t)
         result.append(doc)
+    # result.reverse()
     print("显示前", len(result), " 篇文档\n")
     print(result)
-    stop = input("\n按任意键查看文档...\n")
-    return result
+    stop = input("\n按Y查看文档，任意键跳过查看...\n")
+    if(stop == 'Y' or stop == 'y'):
+        return result
+    else:
+        return []

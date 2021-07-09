@@ -13,7 +13,7 @@ def phrasequery_wordlist(wordlist):
     for word in wordlist:
         index, result = utils.loadIndex(word)
         if index is None:
-            print("No such word!")
+            print("单词不存在!")
             return None
         # result = []
         # for item in index:
@@ -26,7 +26,8 @@ def phrasequery_wordlist(wordlist):
         docID_index.append(index)
         judge_index.append(0)
 
-    #get common docID
+
+
     while True:
         IsSame = True
         IsOver = False
@@ -62,14 +63,13 @@ def phrasequery_wordlist(wordlist):
         if IsOver:
             break
 
-    #for these docID, judge the location
     result = getPhraseDoc(docID_index, docID)
     return result
 
 
 def getPhraseDoc(docID_index, docID):
-    result = [] #result_docID
-    judge_onedoc = [] #wordindex of query words in one doc
+    result = []         # result_docID
+    judge_onedoc = []   # wordindex of query words in one doc
     for j in range(len(docID)):
         judge_onedoc = []
         for i in range(len(docID_index)):
@@ -79,7 +79,7 @@ def getPhraseDoc(docID_index, docID):
             result.append(docID[j])
     return result
 
-    #对每个docID，选出这些词的wordindex，判断是否有短语部分
+    # 对每个docID，选出这些词的wordindex，判断是否有短语部分
 
 def isPhrase(judge_onedoc):
     for i in range(len(judge_onedoc)):
@@ -87,18 +87,18 @@ def isPhrase(judge_onedoc):
     index = 1
     wordlist1 = judge_onedoc[0]
     temp_result = []
-    while index<len(judge_onedoc):
+    while index < len(judge_onedoc):
         wordlist2 = judge_onedoc[index]
         p1 = 0
         p2 = 0
-        while p1<len(wordlist1) and p2<len(wordlist2):
+        while p1 < len(wordlist1) and p2 < len(wordlist2):
             if(wordlist1[p1]==wordlist2[p2]-1):
                 temp_result.append(wordlist2[p2])
                 p1+=1
                 p2+=1
-            elif wordlist1[p1]>wordlist2[p2]:
+            elif wordlist1[p1] > wordlist2[p2]:
                 p2+=1
-            elif wordlist1[p1]<wordlist2[p2]:
+            elif wordlist1[p1] < wordlist2[p2]:
                 p1+=1
         wordlist1 = temp_result
         index+=1
@@ -112,16 +112,16 @@ def phrasequery(query):
     query = query.lower()
     wordlist = query.split(' ')
     docID = phrasequery_wordlist(wordlist)
+    print(1)
     if docID is not None:
         docID = topk.topK(wordlist,docID)
         printquery = [query]
         newwords = wordlist[0].title()
         for i in range(1, len(wordlist)):
-            newwords += " "+wordlist[i].title()
+            newwords += " " + wordlist[i].title()
         printquery.append(newwords)
         #print(index)k
         utils.printtext(printquery,docID)
         #printtext(printquery, docID)
 
-#query = input("Input your query:\n")
-#phrasequery(query)
+
